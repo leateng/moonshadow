@@ -10,6 +10,7 @@ tokio = { version = "1.34.0", features = ["full"] }
 tower-lsp = { version = "0.20.0", features = ["proposed"] }
 prism-sys = { path = "./vender/prism-sys" } 
 prism = { path = "./vender/prism" } 
+walkdir = "2.4.0"
 
 
 [profile.release]
