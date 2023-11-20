@@ -1,7 +1,7 @@
 use prism::parse as parse_ruby;
 use std::collections::HashMap;
 use std::path::Path;
-use std::{fs, io};
+use std::{env, fs, io};
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
@@ -50,7 +50,10 @@ where
 
 #[tokio::main]
 async fn main() {
-    let project_path = Path::new("D:\\work\\CRM_NEW");
+    let dir = env::var("project_dir").unwrap_or_else(|_| {
+        panic!("missing project_dir env variable!");
+    });
+    let project_path = Path::new(&dir);
     let mut files = HashMap::new();
     let mut asts = HashMap::new();
 
