@@ -1,4 +1,4 @@
-use prism::{parse, ParseResult};
+use prism::parse as parse_ruby;
 use std::collections::HashMap;
 use std::path::Path;
 use std::{fs, io};
@@ -43,34 +43,28 @@ where
     Ok(())
 }
 
-// fn read_file(path: &Path) -> Result<&[u8], std::io::Error> {
-//     let file_content = fs::read(path)?;
-//
-//     Ok(&file_content)
+// struct SourceCode<'a> {
+//     source: Vec<u8>,
+//     parse: ParseResult<'a>,
 // }
-
-struct SourceCode<'a> {
-    source: Vec<u8>,
-    parse: ParseResult<'a>,
-}
 
 #[tokio::main]
 async fn main() {
-    let mut asts = HashMap::new();
     let project_path = Path::new("D:\\work\\CRM_NEW");
+    let mut files = HashMap::new();
+    let mut asts = HashMap::new();
+
     visit_ruby_files(project_path, |path| {
-        println!("Found ruby file: {:?}", path);
-        let content = Box::new(fs::read(path).unwrap());
-        asts.insert(
-            path.to_owned(),
-            SourceCode {
-                source: *content,
-                parse: parse(&(*content.as_slice())),
-            },
-        );
+        files.insert(path.to_owned(), fs::read(path).unwrap());
     });
 
-    // println!("{:?}", asts.len());
+    println!("finish loading project files: {:?}", files.len());
+
+    for k in files.keys() {
+        asts.insert(k.clone(), parse_ruby(files.get(k).unwrap().as_slice()));
+    }
+    println!("parse ruby files: {:?}", asts.len());
+
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
 
