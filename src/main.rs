@@ -20,7 +20,7 @@ impl LanguageServer for Backend {
 
     async fn initialized(&self, _: InitializedParams) {
         self.client
-            .log_message(MessageType::INFO, "server initialized!")
+            .log_message(MessageType::INFO, "fast_ruby_lsp server initialized!")
             .await;
     }
 
@@ -29,7 +29,7 @@ impl LanguageServer for Backend {
     }
 }
 
-fn visit_ruby_files<F>(dir: &Path, mut callback: F) -> io::Result<()>
+fn visit_project_files<F>(dir: &Path, mut callback: F) -> io::Result<()>
 where
     F: FnMut(&Path),
 {
@@ -54,7 +54,7 @@ async fn main() {
     let mut files = HashMap::new();
     let mut asts = HashMap::new();
 
-    visit_ruby_files(project_path, |path| {
+    let _ = visit_project_files(project_path, |path| {
         files.insert(path.to_owned(), fs::read(path).unwrap());
     });
 
