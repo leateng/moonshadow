@@ -11,6 +11,7 @@ tower-lsp = { version = "0.20.0", features = ["proposed"] }
 prism-sys = { path = "./vender/prism-sys" } 
 prism = { path = "./vender/prism" } 
 walkdir = "2.4.0"
+dashmap = "5.1.0"
 
 
 [profile.release]
