@@ -239,12 +239,9 @@ async fn main() {
         files.insert(path.to_owned(), fs::read(path).unwrap());
     });
 
-    // println!("finish loading project files: {:?}", files.len());
-
     for k in files.keys() {
         asts.insert(k.clone(), parse_ruby(files.get(k).unwrap().as_slice()));
     }
-    // println!("parse ruby files: {:?}", asts.len());
 
     let stdin = tokio::io::stdin();
     let stdout = tokio::io::stdout();
