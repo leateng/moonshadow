@@ -1,8 +1,11 @@
 use dashmap::DashMap;
 use prism::{parse as parse_ruby, ParseResult};
+use ropey::Rope;
 use std::collections::HashMap;
 use std::path::Path;
 use std::{default, env, fs, io};
+use tokio::fs::File;
+use tokio::io::BufReader;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer, LspService, Server};
@@ -11,8 +14,8 @@ use walkdir::WalkDir;
 #[derive(Debug)]
 struct Backend {
     client: Client,
-    root_path: String,
-    files: DashMap<String, Vec<u8>>,
+    root_path: Option<String>,
+    files: DashMap<String, io::Result<Rope>>,
     // asts: DashMap<String, ParseResult<'a>>,
 }
 
@@ -24,10 +27,11 @@ impl LanguageServer for Backend {
             .await;
 
         if let Some(root_path) = params.root_path {
-            self.root_path = Some(root_path);
-            self.files = DashMap::new();
-
-            let _ = visit_project_files(Path::new(&self.root_path.unwrap()), |path| {
+            let _ = visit_project_files(Path::new(&root_path), |path| {
+                // self.files
+                //     .insert(path.to_str().unwrap().to_owned(), fs::read(path).unwrap());
+                let mut text =
+                    Rope::from_reader(BufReader::new(File::open(path).unwrap())).unwrap();
                 self.files
                     .insert(path.to_str().unwrap().to_owned(), fs::read(path).unwrap());
             });
