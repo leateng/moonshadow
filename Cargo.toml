@@ -12,6 +12,8 @@ prism-sys = { path = "./vender/prism-sys" }
 prism = { path = "./vender/prism" } 
 walkdir = "2.4.0"
 dashmap = "5.1.0"
+ropey = "1.5.0"
+pest = "*"
 
 
 [profile.release]

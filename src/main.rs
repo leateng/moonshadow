@@ -11,8 +11,8 @@ use walkdir::WalkDir;
 #[derive(Debug)]
 struct Backend {
     client: Client,
-    root_path: Option<String>,
-    files: Option<DashMap<String, Vec<u8>>>,
+    root_path: String,
+    files: DashMap<String, Vec<u8>>,
     // asts: DashMap<String, ParseResult<'a>>,
 }
 
@@ -20,11 +20,18 @@ struct Backend {
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         self.client
-            .log_message(MessageType::INFO, "fast_ruby_lsp server start...")
+            .log_message(MessageType::INFO, "starting fast_ruby_lsp server ...")
             .await;
-        self.client
-            .log_message(MessageType::INFO, format!("InitializeParams={:?}", params))
-            .await;
+
+        if let Some(root_path) = params.root_path {
+            self.root_path = Some(root_path);
+            self.files = DashMap::new();
+
+            let _ = visit_project_files(Path::new(&self.root_path.unwrap()), |path| {
+                self.files
+                    .insert(path.to_str().unwrap().to_owned(), fs::read(path).unwrap());
+            });
+        }
 
         Ok(InitializeResult {
             capabilities: ServerCapabilities {
@@ -33,7 +40,7 @@ impl LanguageServer for Backend {
                 completion_provider: Some(CompletionOptions::default()),
                 definition_provider: Some(OneOf::Left(true)),
                 text_document_sync: Some(TextDocumentSyncCapability::from(
-                    TextDocumentSyncKind::FULL,
+                    TextDocumentSyncKind::INCREMENTAL,
                 )),
                 ..Default::default()
             },
@@ -249,7 +256,7 @@ async fn main() {
     let (service, socket) = LspService::new(|client| Backend {
         client: client,
         root_path: None::<String>,
-        files: None::<DashMap<String, Vec<u8>>>,
+        files: DashMap::new(),
     });
     Server::new(stdin, stdout, socket).serve(service).await;
 }
